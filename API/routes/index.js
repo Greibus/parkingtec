@@ -1,11 +1,12 @@
 //const Space = require('./Space.js') ;
-var express = require('express');
-var app = express.Router();
+const cors = require('cors');
+const express = require('express');
+const { Space } = require('./spaces/Parking.js');
+const { Reservation } = require('./spaces/Parking.js');
 
-const { Space } = require('./Parking/parking.js');
-
+const app = express();
 app.use(express.json());
-
+app.use(cors());
 
 const parking = []; // esta es la lista del parqueo
 const reservations = []; // lista de los carros en el parqueo
@@ -17,13 +18,34 @@ const reservations = []; // lista de los carros en el parqueo
 
 app.all('/', (req, res, next) => {
     if (req.get('Content-Type') === 'application/json') next();
-    res.status(405).send('Solo se acepta json')
+    res.status(405).json({ error: 'Solo se acepta json' })
 
 
 });
 
 app.get('/spaces', (req, res) => {
-    if (parking.length === 0) return res.status(404).send('No se han creado espacios');
+    if (parking.length === 0) return res.status(404).json({ error: 'No se han creado espacios' });
+    const dms = parking.length;
+    let spacetemp = [];
+    if (req.query.state === 'free') {
+        for (let i = 0; i < dms; i++) {
+            if (parking[i].state === 'free') {
+            spacetemp.push(parking[i].state);        
+            }
+            
+        
+        }
+        return res.json(spacetemp);
+    } else if (req.query.state === 'in-use') {
+        for (let i = 0; i < dms; i++) {
+            if (parking[i].state === 'in-use') {
+            spacetemp.push(parking[i].state);        
+            }
+            
+        
+        }
+        return res.json(spacetemp);
+    }
     return res.json(parking);
 
 
@@ -31,7 +53,7 @@ app.get('/spaces', (req, res) => {
 
 
 app.get('/spaces/state', (req, res) => {
-    if (parking.length === 0) return res.status(404).json('No se han creado espacios');
+    if (parking.length === 0) return res.status(404).json({ error: 'No hay vehiculos' });
     const tempList = [];
     const dms = parking.length;
     for (let i = 0; i < dms;i++ ) {
@@ -45,26 +67,27 @@ app.get('/spaces/state', (req, res) => {
 
 app.get('/spaces/:id', (req, res) => {
     const place = parking.find(c => c.id === parseInt(req.params.id));
-    if (!place) return res.status(404).json('No existe un campo con ese id');
+    if (!place) return res.status(404).json({ error: 'No existe un campo con ese id' });
     return res.json(place);
 
 });
 
 
 app.post('/spaces/', (req, res) => {
+    if (!req.query.infospace) return res.status(404).json({error:'Por favor agregar un detalle del espacio'});
     var newSpace = new Space(req.query.infospace);
     parking.push(newSpace);
-    return res.json(parking); // Cambiar a mensaje de ok
-
+    //return res.json(parking); // Cambiar a mensaje de ok
+    res.status(200).json("El espacio se actualizo correctamente");
 });
 
 app.put('/spaces/:id', (req, res) => {
     const place = parking.find(c => c.id === parseInt(req.params.id));
-    if (!place) return res.status(404).json('Error: No existe un campo con ese ID');
+    if (!place) return res.status(404).json({ error: 'No existe un campo con ese ID' });
     place.infospace = req.query.infospace;
     
     //res.json(parking);
-    res.status(200).json("El espacio se actualizo correctamente")
+    res.status(200).json("El espacio se actualizo correctamente");
             
     
 });
@@ -72,9 +95,9 @@ app.put('/spaces/:id', (req, res) => {
 
 app.delete('/spaces/:id', (req, res) => {
     const place = parking.find(p => p.id === parseInt(req.params.id));
-    if (!place) return res.status(404).json('No existe campo con ese ID');
+    if (!place) return res.status(404).json({ error: 'No existe campo con ese ID' });
     const carr = reservations.find(c => c.id === parseInt(req.params.id));
-    if(carr) return res.status(302).json('Hay un vehiculo en ese espacio'); // ESTATUS 302 FOUND
+    if (carr) return res.status(302).json({error : 'Hay un vehiculo en ese espacio'}); // ESTATUS 302 FOUND
     const index = parking.indexOf(place);
     parking.splice(index, 1);
     res.satatus(200).json('Se elimino el espacio correctamente'); 
@@ -86,20 +109,20 @@ app.delete('/spaces/:id', (req, res) => {
 
 app.post('/reservations', (req, res) => {
     const emptyPlace = parking.find(p => p.state === 'free');
-    if (!emptyPlace) return res.status(404).json('Error: No hay espacios disponibles');
+    if (!emptyPlace) return res.status(404).json({ error: 'No hay espacios disponibles' });
     let tempTime = new Date();
     let time = tempTime.getHours() + ":" + tempTime.getMinutes();
-    if (!req.query.plate) return res.status(404).json('Error: Por favor agregar una placa');
+    if (!req.query.plate) return res.status(404).json({ error: 'Por favor agregar una placa' });
     emptyPlace.state = 'in-use';
     const vehicle = new Reservation(emptyPlace.id, req.query.plate,  time);
     reservations.push(vehicle);
-   // return res.json(reservations); // cambiar mensaje a ok
+    //return res.json(reservations); // cambiar mensaje a ok
     return res.status(200).json("Se reservo correctamente")
 
 });
 
 app.get('/reservations', (req, res) => {
-    if (reservations.length === 0) return res.status(404).json('Error: No hay carros en el parqueo');
+    if (reservations.length === 0) return res.status(404).json({ error: ' No hay carros en el parqueo' });
     return res.json(reservations);
 
 
@@ -107,11 +130,13 @@ app.get('/reservations', (req, res) => {
 
 app.delete('/reservations/:id', (req, res) => {
     const delreservation = reservations.find(p => p.id === parseInt(req.params.id));
-    if (!delreservation) return res.status(404).json('No existe campo con ese ID');
+    if (!delreservation) return res.status(404).json({ error: 'No existe campo con ese ID' });
     const index = reservations.indexOf(delreservation);
     reservations.splice(index, 1);
+    const changestate = parking.find(p => p.id === delreservation.id);
+    changestate.state = 'free';
     //res.json(reservations); // cambiar mensaje a ok
     res.status(200).json("Se elimino correctamente la reserva")
 });
 
-module.exports = app;
+app.listen(3000, () => console.log("Listening on port 3000"));
