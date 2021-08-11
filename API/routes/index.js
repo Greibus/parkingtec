@@ -1,12 +1,12 @@
 //const Space = require('./Space.js') ;
-const cors = require('cors');
-const express = require('express');
-const { Space } = require('./spaces/Parking.js');
-const { Reservation } = require('./spaces/Parking.js');
+var express = require('express');
+var app = express.Router();
 
-const app = express();
+const { Space } = require('./Parking/parking.js');
+const { Reservation } = require('./Parking/parking.js');
+
 app.use(express.json());
-app.use(cors());
+
 
 const parking = []; // esta es la lista del parqueo
 const reservations = []; // lista de los carros en el parqueo
@@ -16,10 +16,18 @@ const reservations = []; // lista de los carros en el parqueo
 
 
 
-app.all('/', (req, res, next) => {
-    if (req.get('Content-Type') === 'application/json') next();
-    res.status(405).json({ error: 'Solo se acepta json' })
-
+app.all('/*', (req, res, next) => {
+    res.header("Access-Control-Allow-Origin","*");   
+    res.header("Access-Control-Allow-Methods","GET,PUT,POST,DELETE,OPTIONS");
+    res.header("Access-Control-Allow-Headers","X-Requested-With,Content-type,Accept,X-Access-Token,X-Key");   ; 
+    if (req.method==='GET' || req.method==='DELETE'){
+        next();  
+    }
+    else if (req.get('Content-Type')=== 'application/json'){       
+        next();   
+    }else{       
+        res.status(405).send(req.get('Content-Type'))   
+    } 
 
 });
 
@@ -30,7 +38,7 @@ app.get('/spaces', (req, res) => {
     if (req.query.state === 'free') {
         for (let i = 0; i < dms; i++) {
             if (parking[i].state === 'free') {
-            spacetemp.push(parking[i].state);        
+            spacetemp.push(parking[i]);        
             }
             
         
@@ -39,7 +47,7 @@ app.get('/spaces', (req, res) => {
     } else if (req.query.state === 'in-use') {
         for (let i = 0; i < dms; i++) {
             if (parking[i].state === 'in-use') {
-            spacetemp.push(parking[i].state);        
+            spacetemp.push(parking[i]);        
             }
             
         
@@ -139,4 +147,4 @@ app.delete('/reservations/:id', (req, res) => {
     res.status(200).json("Se elimino correctamente la reserva")
 });
 
-app.listen(3000, () => console.log("Listening on port 3000"));
+module.exports = app;
