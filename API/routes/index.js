@@ -19,7 +19,7 @@ const reservations = []; // lista de los carros en el parqueo
 app.all('/*', (req, res, next) => {
     res.header("Access-Control-Allow-Origin","*");   
     res.header("Access-Control-Allow-Methods","GET,PUT,POST,DELETE,OPTIONS");
-    res.header("Access-Control-Allow-Headers","X-Requested-With,Content-type,Accept,X-Access-Token,X-Key");   ; 
+    res.header("Access-Control-Allow-Headers","X-Requested-With,Content-type,Accept,X-Access-Token,X-Key");   
     if (req.method==='GET' || req.method==='DELETE'){
         next();  
     }
