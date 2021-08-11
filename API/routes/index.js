@@ -108,7 +108,7 @@ app.delete('/spaces/:id', (req, res) => {
     if (carr) return res.status(302).json({error : 'Hay un vehiculo en ese espacio'}); // ESTATUS 302 FOUND
     const index = parking.indexOf(place);
     parking.splice(index, 1);
-    res.satatus(200).json('Se elimino el espacio correctamente'); 
+    res.status(200).json('Se elimino el espacio correctamente'); 
     //res.json(parking);
 });
 
