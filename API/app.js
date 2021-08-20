@@ -5,9 +5,32 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const cors = require('cors');
 
+const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+
 var indexRouter = require('./routes/index');
 
+const swaggerOptions = {
+  swaggerDefinition:{
+      info: {
+          title: 'Parking API',
+          description: "Información del Parking API",
+          contact: {
+              name: "Bradly y Anthony"
+          },
+          servers: ["http://localhost:3001"]
+      }
+  },
+apis: ["./routes/*.js"]
+
+};
+
+
+
 var app = express();
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
