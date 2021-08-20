@@ -2,10 +2,17 @@
 var express = require('express');
 var app = express.Router();
 
+
+
 const { Space } = require('./Parking/parking.js');
 const { Reservation } = require('./Parking/parking.js');
 
+
+
 app.use(express.json());
+
+
+
 
 
 const parking = []; // esta es la lista del parqueo
@@ -14,7 +21,15 @@ const reservations = []; // lista de los carros en el parqueo
 
 
 
-
+/**
+ * @swagger
+ * /spaces:
+ *  get:
+ *      description: Se usa para obtener todos los espacios disponibles
+ *      responses:
+ *          '200': 
+ *              description: valor aceptado
+ */
 
 app.all('/*', (req, res, next) => {
     res.header("Access-Control-Allow-Origin","*");   
@@ -31,10 +46,20 @@ app.all('/*', (req, res, next) => {
 
 });
 
+
 app.get('/spaces', (req, res) => {
     if (parking.length === 0) return res.status(404).json({ error: 'No se han creado espacios' });
     const dms = parking.length;
     let spacetemp = [];
+
+    const page = req.query.page;
+    const limit = req.query.limit;
+
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    const result = parking.slice(startIndex, endIndex);
+
     if (req.query.state === 'free') {
         for (let i = 0; i < dms; i++) {
             if (parking[i].state === 'free') {
@@ -53,6 +78,9 @@ app.get('/spaces', (req, res) => {
         
         }
         return res.json(spacetemp);
+    } else if (page != 0) {
+
+        return res.json(result);
     }
     return res.json(parking);
 
@@ -112,7 +140,15 @@ app.delete('/spaces/:id', (req, res) => {
     //res.json(parking);
 });
 
-
+/**
+ * @swagger
+ * /reservations:
+ *  get:
+ *      description: Se usa para obtener todos los espacios disponibles
+ *      responses:
+ *          '200': 
+ *              description: valor aceptado
+ */
 
 
 app.post('/reservations', (req, res) => {
