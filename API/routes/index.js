@@ -55,6 +55,10 @@ app.get('/spaces', (req, res) => {
     const page = req.query.page;
     const limit = req.query.limit;
 
+    const name1 = req.query.name;
+    const command = req.query.command;
+    const value = req.query.value;
+
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
 
@@ -81,6 +85,23 @@ app.get('/spaces', (req, res) => {
     } else if (page != 0) {
 
         return res.json(result);
+    } else if (command === 'eq' || command === 'lte' || command === 'gte') {
+        
+        if (command === 'eq'){
+            var resultF = parking.filter(function(park){
+                return park.id === value
+            })
+        }else if (command === 'lte'){
+            var resultF = parking.filter(function(park){
+                return park.id < value
+            })
+        }else {
+            var resultF = parking.filter(function(park){
+                return park.id > value
+            })
+        }
+        
+        return res.json(resultF);
     }
     return res.json(parking);
 
